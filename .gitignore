@@ -216,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Datasets — DocILE is far too large for git, and the download is token-gated.
+data/
+*.zip
+
+# Secrets — the DocILE token is a live credential (it is the S3 URL path).
+.env
+*.token
+secrets/
