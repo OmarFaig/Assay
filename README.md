@@ -9,11 +9,37 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-Dependencies are not pinned yet. Once they are, install them with:
-
 ```bash
 pip install -r requirements.txt
 ```
+
+## Text extraction
+
+```python
+from assay import extract
+
+doc = extract("00134dd365a24343b35b78c6")
+doc.source            # "pdf" or "ocr"
+doc.words[0].text     # "TELETIME"
+doc.words[0].bbox     # (x0, y0, x1, y1), normalized to [0, 1], top-left origin
+doc.text              # words joined in reading order
+```
+
+**About 31% of DocILE PDFs are scans with no text layer.** PyMuPDF returns
+nothing for those, silently, so `extract()` reads the embedded text layer when
+there is one and falls back to DocILE's pre-computed OCR when there is not.
+Both paths emit the same `Word` records, so callers do not need to branch on
+the source; `doc.source` reports which was used, and `Word.confidence` is
+`None` for text-layer words since those characters are exact rather than
+predicted.
+
+Measured over the full `trainval` split (5,680 documents, 1.79M words): 69.2%
+read from the text layer, 30.8% from OCR, no failures, ~14s single-threaded.
+
+One PyMuPDF subtlety worth knowing if you touch the geometry: word boxes come
+back in unrotated cropbox space while `page.rect` is rotation-adjusted, so on
+`/Rotate 90` pages the two disagree and dividing by `page.rect` overflows
+`[0, 1]`. `_pdf_words` maps boxes through `page.rotation_matrix` first.
 
 ## Dataset
 
