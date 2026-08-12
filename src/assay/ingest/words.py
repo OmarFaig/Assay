@@ -13,9 +13,10 @@ do not need to know which source a document came from.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator, Literal
+from typing import Literal
 
 import pymupdf
 
@@ -152,7 +153,9 @@ def _ocr_words(path: Path) -> tuple[tuple[Word, ...], int]:
     return tuple(words), len(pages)
 
 
-def extract(doc_id: str, root: Path | str = "data/docile", *, force: Source | None = None) -> Document:
+def extract(
+    doc_id: str, root: Path | str = "data/docile", *, force: Source | None = None
+) -> Document:
     """Extract words for one document, preferring the PDF text layer.
 
     Pass `force` to pin a source and skip the fallback, which is useful when

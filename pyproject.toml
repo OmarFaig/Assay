@@ -1,0 +1,75 @@
+[project]
+name = "assay"
+version = "0.1.0"
+description = "Confidence-gated invoice extraction"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.9",
+    "pymupdf>=1.28.2",
+]
+
+[project.optional-dependencies]
+# Kept out of the default install: the stack services are not needed to run
+# ingestion or the schema, and pulling drivers in adds build weight for anyone
+# who only wants those. Install with `uv sync --extra service`.
+service = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "psycopg[binary]>=3.2",
+    "redis>=5.2",
+    "langfuse>=3.0",
+    "openai>=1.54",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "ruff>=0.8",
+    "pre-commit>=4.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/assay"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.format]
+# Ruff also formats Python blocks inside Markdown, which reflows the aligned
+# comments in the README's examples. The pre-commit hook is Python-only, so
+# without this `make lint` fails on files the hook considers clean.
+exclude = ["*.md"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "RUF",  # ruff-specific
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["assay"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+    # Anything touching data/docile, which is a 1 GB token-gated download and
+    # therefore absent on a fresh clone and in CI. Deselect with -m "not data".
+    "data: requires the DocILE dataset on disk",
+]
+
+[tool.coverage.run]
+source = ["src/assay"]
