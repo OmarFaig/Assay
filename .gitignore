@@ -225,3 +225,11 @@ data/
 .env
 *.token
 secrets/
+
+# Working notes, not documentation.
+STATUS.md
+
+# Generated review artifacts — these embed DocILE page images and invoice
+# contents, which are token-gated and not ours to redistribute.
+notebooks/review_data.json
+notebooks/review.html

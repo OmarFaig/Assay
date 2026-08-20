@@ -41,6 +41,11 @@ packages = ["src/assay"]
 line-length = 100
 target-version = "py312"
 src = ["src", "tests"]
+# Exploration only — `notebooks/README.md` says nothing here is imported by the
+# package, and these scripts embed HTML and CSS as string literals where a
+# column limit means nothing. Anything that becomes load-bearing moves into
+# `src/assay` and gets linted there.
+extend-exclude = ["notebooks"]
 
 [tool.ruff.format]
 # Ruff also formats Python blocks inside Markdown, which reflows the aligned

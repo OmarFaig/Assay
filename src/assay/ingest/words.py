@@ -65,6 +65,39 @@ class Document:
     def page(self, index: int) -> tuple[Word, ...]:
         return tuple(w for w in self.words if w.page == index)
 
+    def layout(self, *, overlap: float = 0.5) -> str:
+        """Words grouped into lines, each line ordered left to right.
+
+        `text` joins every word on a page with a single space, which flattens an
+        invoice into one run-on line. That is fine for a keyword search and bad
+        for extraction: the table collapses, and a line amount becomes
+        indistinguishable from the total it sums into. Grouping words back into
+        lines restores the only layout cue a text-only prompt can carry.
+
+        Two words share a line when their vertical extents overlap by at least
+        `overlap` of the shorter word's height. An overlap test rather than a
+        baseline-distance test because font sizes vary within a line — a bold
+        total next to its label — and a fixed distance threshold splits those.
+        """
+        out: list[str] = []
+        for index in range(self.page_count):
+            words = sorted(self.page(index), key=lambda w: (w.bbox[1], w.bbox[0]))
+            lines: list[list[Word]] = []
+            for word in words:
+                _, y0, _, y1 = word.bbox
+                for line in lines:
+                    ly0 = min(w.bbox[1] for w in line)
+                    ly1 = max(w.bbox[3] for w in line)
+                    shared = min(y1, ly1) - max(y0, ly0)
+                    if shared >= overlap * min(y1 - y0, ly1 - ly0):
+                        line.append(word)
+                        break
+                else:
+                    lines.append([word])
+            for line in lines:
+                out.append(" ".join(w.text for w in sorted(line, key=lambda w: w.bbox[0])))
+        return "\n".join(out)
+
 
 def _pdf_words(path: Path) -> tuple[tuple[Word, ...], int, bool]:
     """Read the embedded text layer.
